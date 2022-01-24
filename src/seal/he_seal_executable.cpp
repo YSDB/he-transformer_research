@@ -350,7 +350,7 @@ void HESealExecutable::load_public_key(const pb::TCPMessage& pb_message) {
   seal::PublicKey key;
   const std::string& pk_str = pb_message.public_key().public_key();
   std::stringstream key_stream(pk_str);
-  key.load(m_context, key_stream);
+  key.load(*m_context, key_stream);
   m_he_seal_backend.set_public_key(key);
   m_client_public_key_set = true;
 }
@@ -362,7 +362,7 @@ void HESealExecutable::load_eval_key(const pb::TCPMessage& pb_message) {
   seal::RelinKeys keys;
   const std::string& evk_str = pb_message.eval_key().eval_key();
   std::stringstream key_stream(evk_str);
-  keys.load(m_context, key_stream);
+  keys.load(*m_context, key_stream);
   m_he_seal_backend.set_relin_keys(keys);
   m_client_eval_key_set = true;
 }

@@ -72,7 +72,7 @@ HESealEncryptionParameters::HESealEncryptionParameters(
       m_scale(scale),
       m_complex_packing(complex_packing) {
   m_seal_encryption_parameters =
-      seal::EncryptionParameters(seal::scheme_type::CKKS);
+      seal::EncryptionParameters(seal::scheme_type::ckks);
 
   m_seal_encryption_parameters.set_poly_modulus_degree(poly_modulus_degree);
 
@@ -89,7 +89,7 @@ void HESealEncryptionParameters::validate_parameters() const {
                m_scheme_name);
 
   static std::unordered_set<uint64_t> valid_poly_modulus{1024, 2048,  4096,
-                                                         8192, 16384, 32768};
+                                                         8192, 16384, 32768}; //This can be changed later.
   NGRAPH_CHECK(valid_poly_modulus.count(poly_modulus_degree()) != 0,
                "poly_modulus_degree must be 1024, 2048, 4096, 8192, 16384, "
                "32768");
@@ -101,16 +101,17 @@ void HESealEncryptionParameters::validate_parameters() const {
 
   auto seal_sec_level = seal_security_level(security_level());
 
-  auto context = seal::SEALContext::Create(m_seal_encryption_parameters, true,
-                                           seal_sec_level);
-
-  NGRAPH_CHECK(context->parameters_set(), "Invalid parameters");
+  seal::SEALContext context(m_seal_encryption_parameters, true, seal_sec_level);
+  //std::shared_ptr<seal::SEALContext>& context = &temp_context;
+  //context = std::make_shared<seal::SEALContext>(m_seal_encryption_parameters, true, seal_sec_level);
+  
+  NGRAPH_CHECK(context.parameters_set(), "Invalid parameters");
 
   // TODO(fboemer): validate scale is reasonable
 }
 
 double HESealEncryptionParameters::choose_scale(
-    const std::vector<seal::SmallModulus>& coeff_moduli) {
+    const std::vector<seal::Modulus>& coeff_moduli) {
   if (coeff_moduli.size() > 2) {
     return static_cast<double>(coeff_moduli[coeff_moduli.size() - 2].value());
   }
@@ -144,7 +145,7 @@ bool HESealEncryptionParameters::same_context(
 
   return (p1 == p2);
 }
-
+//Save&Load a copy of encryptionparameters to/from stream
 void HESealEncryptionParameters::save(std::ostream& stream) const {
   stream.write(reinterpret_cast<const char*>(&m_scale), sizeof(m_scale));
   stream.write(reinterpret_cast<const char*>(&m_complex_packing),
@@ -232,7 +233,7 @@ void print_encryption_parameters(const HESealEncryptionParameters& params,
 
   param_ss << "\n/\n"
            << "| Encryption parameters :\n"
-           << "|   scheme: CKKS\n"
+           << "|   scheme: ckks\n"
            << "|   poly_modulus_degree: " << params.poly_modulus_degree()
            << "\n"
            << "|   coeff_modulus size: "

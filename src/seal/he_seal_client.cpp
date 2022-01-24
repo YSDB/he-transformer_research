@@ -79,21 +79,27 @@ void HESealClient::set_seal_context() {
   auto seal_sec_level =
       seal_security_level(m_encryption_params.security_level());
 
-  m_context = seal::SEALContext::Create(
-      m_encryption_params.seal_encryption_parameters(), true, seal_sec_level);
+  //seal::SEALContext m_context(m_encryption_params.seal_encryption_parameters(), true, sec_level);
+  //m_context = std::shared_ptr<seal::SEALContext>m_context;
+  //seal::SEALContext t_context(m_encryption_params.seal_encryption_parameters(), true, seal_sec_level);
+  m_context = std::make_shared<seal::SEALContext>(m_encryption_params.seal_encryption_parameters(), true, seal_sec_level);
 
   print_encryption_parameters(m_encryption_params, *m_context);
 
-  m_keygen = std::make_shared<seal::KeyGenerator>(m_context);
+  m_keygen = std::make_shared<seal::KeyGenerator>(*m_context);
   if (m_context->using_keyswitching()) {
-    m_relin_keys = std::make_shared<seal::RelinKeys>(m_keygen->relin_keys());
+    seal::RelinKeys m_relin_keys_temp;
+    m_keygen->create_relin_keys(m_relin_keys_temp);
+    m_relin_keys = std::make_shared<seal::RelinKeys>(m_relin_keys_temp);
   }
-  m_public_key = std::make_shared<seal::PublicKey>(m_keygen->public_key());
+  seal::PublicKey m_public_key_temp;
+  m_keygen->create_public_key(m_public_key_temp);
+  m_public_key = std::make_shared<seal::PublicKey>(m_public_key_temp);
   m_secret_key = std::make_shared<seal::SecretKey>(m_keygen->secret_key());
-  m_encryptor = std::make_shared<seal::Encryptor>(m_context, *m_public_key);
-  m_decryptor = std::make_shared<seal::Decryptor>(m_context, *m_secret_key);
-  m_evaluator = std::make_shared<seal::Evaluator>(m_context);
-  m_ckks_encoder = std::make_shared<seal::CKKSEncoder>(m_context);
+  m_encryptor = std::make_shared<seal::Encryptor>(*m_context, *m_public_key);
+  m_decryptor = std::make_shared<seal::Decryptor>(*m_context, *m_secret_key);
+  m_evaluator = std::make_shared<seal::Evaluator>(*m_context);
+  m_ckks_encoder = std::make_shared<seal::CKKSEncoder>(*m_context);
 }
 
 void HESealClient::send_public_and_relin_keys() {

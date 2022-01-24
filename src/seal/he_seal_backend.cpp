@@ -54,24 +54,30 @@ void HESealBackend::generate_context() {
   seal::sec_level_type sec_level =
       seal_security_level(m_encryption_params.security_level());
 
-  m_context = seal::SEALContext::Create(
-      m_encryption_params.seal_encryption_parameters(), true, sec_level);
+  //seal::SEALContext m_context(m_encryption_params.seal_encryption_parameters(), true, sec_level);
+  m_context = std::make_shared<seal::SEALContext>(m_encryption_params.seal_encryption_parameters(), true, sec_level);
+  //seal::SEALContext t_context(m_encryption_params.seal_encryption_parameters(), true, sec_level);
+  //m_context = std::make_shared<seal::SEALContext>(t_context);
 
   auto context_data = m_context->key_context_data();
 
-  m_keygen = std::make_shared<seal::KeyGenerator>(m_context);
+  m_keygen = std::make_shared<seal::KeyGenerator>(*m_context);
   if (m_context->using_keyswitching()) {
-    m_relin_keys = std::make_shared<seal::RelinKeys>(m_keygen->relin_keys());
+    seal::RelinKeys m_relin_keys_temp;
+    m_keygen->create_relin_keys(m_relin_keys_temp);
+    m_relin_keys = std::make_shared<seal::RelinKeys>(m_relin_keys_temp);
     // Delay creation of m_galois_keys until needed
     // m_galois_keys =
     // std::make_shared<seal::GaloisKeys>(m_keygen->galois_keys());
   }
-  m_public_key = std::make_shared<seal::PublicKey>(m_keygen->public_key());
+  seal::PublicKey m_public_key_temp;
+  m_keygen->create_public_key(m_public_key_temp);
+  m_public_key = std::make_shared<seal::PublicKey>(m_public_key_temp);
   m_secret_key = std::make_shared<seal::SecretKey>(m_keygen->secret_key());
-  m_encryptor = std::make_shared<seal::Encryptor>(m_context, *m_public_key);
-  m_decryptor = std::make_shared<seal::Decryptor>(m_context, *m_secret_key);
-  m_evaluator = std::make_shared<seal::Evaluator>(m_context);
-  m_ckks_encoder = std::make_shared<seal::CKKSEncoder>(m_context);
+  m_encryptor = std::make_shared<seal::Encryptor>(*m_context, *m_public_key);
+  m_decryptor = std::make_shared<seal::Decryptor>(*m_context, *m_secret_key);
+  m_evaluator = std::make_shared<seal::Evaluator>(*m_context);
+  m_ckks_encoder = std::make_shared<seal::CKKSEncoder>(*m_context);
 
   auto coeff_moduli = context_data->parms().coeff_modulus();
 
@@ -92,6 +98,8 @@ bool HESealBackend::set_config(const std::map<std::string, std::string>& config,
         m_enable_client = true;
       }
     } else if (option == "encryption_parameters") {
+      	NGRAPH_WARN
+          << "What's wrong with it?";
       auto new_parms = HESealEncryptionParameters::parse_config_or_use_default(
           setting.c_str());
       update_encryption_parameters(new_parms);

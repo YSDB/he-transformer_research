@@ -185,11 +185,13 @@ class HESealBackend : public runtime::Backend {
                size_t batch_size, const bool complex_packing) const;
 
   /// \brief Returns pointer to SEAL context
+  /// Returns SEALContext?
   const std::shared_ptr<seal::SEALContext> get_context() const {
     return m_context;
   }
 
   /// \brief Returns pointer to relinearization keys
+  ///Why all pionters?
   const std::shared_ptr<seal::RelinKeys> get_relin_keys() const {
     return m_relin_keys;
   }
@@ -198,8 +200,9 @@ class HESealBackend : public runtime::Backend {
   const std::shared_ptr<seal::GaloisKeys> get_galois_keys() {
     // TODO(fboemer): make thread-safe
     if (m_galois_keys == nullptr) {
-      m_galois_keys =
-          std::make_shared<seal::GaloisKeys>(m_keygen->galois_keys());
+      seal::GaloisKeys m_galois_keys_temp;
+      m_keygen->create_galois_keys(m_galois_keys_temp);
+      m_galois_keys = std::make_shared<seal::GaloisKeys>(m_galois_keys_temp);
     }
     return m_galois_keys;
   }
@@ -247,7 +250,7 @@ class HESealBackend : public runtime::Backend {
   /// \param[in] key public key
   void set_public_key(const seal::PublicKey& key) {
     m_public_key = std::make_shared<seal::PublicKey>(key);
-    m_encryptor = std::make_shared<seal::Encryptor>(m_context, *m_public_key);
+    m_encryptor = std::make_shared<seal::Encryptor>(*m_context, *m_public_key);
   }
 
   /// \brief Returns the top-level scale used for encoding

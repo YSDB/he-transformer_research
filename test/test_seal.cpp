@@ -25,24 +25,30 @@
 #include "util/test_tools.hpp"
 
 TEST(seal_example, seal_ckks_basics) {
-  seal::EncryptionParameters parms(seal::scheme_type::CKKS);
+  seal::EncryptionParameters parms(seal::scheme_type::ckks);
   size_t poly_modulus_degree = 8192;
   parms.set_poly_modulus_degree(poly_modulus_degree);
   parms.set_coeff_modulus(
       seal::CoeffModulus::Create(poly_modulus_degree, {60, 40, 40, 60}));
 
-  auto context = seal::SEALContext::Create(parms);
+  //seal::SEALContext t_context(parms);
+  std::shared_ptr<seal::SEALContext> context;
+  context = std::make_shared<seal::SEALContext>(parms);
   // print_parameters(context);
 
-  seal::KeyGenerator keygen(context);
-  auto public_key = keygen.public_key();
+  seal::KeyGenerator keygen(*context);
+  seal::PublicKey public_key;
+  keygen.create_public_key(public_key);
+  //auto public_key = keygen.public_key();
   auto secret_key = keygen.secret_key();
-  auto relin_keys = keygen.relin_keys();
+  seal::RelinKeys relin_keys;
+  keygen.create_relin_keys(relin_keys);
+  //auto relin_keys = keygen.relin_keys();
 
-  seal::Encryptor encryptor(context, public_key);
-  seal::Evaluator evaluator(context);
-  seal::Decryptor decryptor(context, secret_key);
-  seal::CKKSEncoder encoder(context);
+  seal::Encryptor encryptor(*context, public_key);
+  seal::Evaluator evaluator(*context);
+  seal::Decryptor decryptor(*context, secret_key);
+  seal::CKKSEncoder encoder(*context);
 
   std::vector<double> input{0.0, 1.1, 2.2, 3.3};
 
@@ -70,25 +76,33 @@ TEST(seal_example, seal_ckks_basics) {
 }
 
 TEST(seal_example, seal_ckks_complex_conjugate) {
-  seal::EncryptionParameters parms(seal::scheme_type::CKKS);
+  seal::EncryptionParameters parms(seal::scheme_type::ckks);
   size_t poly_modulus_degree = 8192;
   parms.set_poly_modulus_degree(poly_modulus_degree);
   parms.set_coeff_modulus(
       seal::CoeffModulus::Create(poly_modulus_degree, {60, 40, 40, 60}));
 
-  auto context = seal::SEALContext::Create(parms);
+  std::shared_ptr<seal::SEALContext> context;
+  context = std::make_shared<seal::SEALContext>(parms);
+  //auto context = seal::SEALContext::Create(parms);
   // print_parameters(context);
 
-  seal::KeyGenerator keygen(context);
-  auto public_key = keygen.public_key();
+  seal::KeyGenerator keygen(*context);
+  seal::PublicKey public_key;
+  keygen.create_public_key(public_key);
+  //auto public_key = keygen.public_key();
   auto secret_key = keygen.secret_key();
-  auto relin_keys = keygen.relin_keys();
-  auto galois_keys = keygen.galois_keys();
+  seal::RelinKeys relin_keys;
+  keygen.create_relin_keys(relin_keys);
+  //auto relin_keys = keygen.relin_keys();
+  seal::GaloisKeys galois_keys;
+  keygen.create_galois_keys(galois_keys);
+  //auto galois_keys = keygen.galois_keys();
 
-  seal::Encryptor encryptor(context, public_key);
-  seal::Evaluator evaluator(context);
-  seal::Decryptor decryptor(context, secret_key);
-  seal::CKKSEncoder encoder(context);
+  seal::Encryptor encryptor(*context, public_key);
+  seal::Evaluator evaluator(*context);
+  seal::Decryptor decryptor(*context, secret_key);
+  seal::CKKSEncoder encoder(*context);
 
   std::vector<std::complex<double>> input{{0.0, 1.1}, {2.2, 3.3}};
   std::vector<std::complex<double>> exp_output{{0.0, -1.1}, {2.2, -3.3}};

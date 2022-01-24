@@ -101,7 +101,7 @@ class HESealEncryptionParameters {
   /// \param[in] coeff_moduli List of coefficient moduli
   /// \returns Chosen scale
   static double choose_scale(
-      const std::vector<seal::SmallModulus>& coeff_moduli);
+      const std::vector<seal::Modulus>& coeff_moduli);
 
   /// \brief Saves encryption parameters to a stream
   void save(std::ostream& stream) const;
@@ -144,7 +144,7 @@ class HESealEncryptionParameters {
  private:
   std::string m_scheme_name;
   seal::EncryptionParameters m_seal_encryption_parameters{
-      seal::scheme_type::CKKS};
+      seal::scheme_type::ckks};
   std::uint64_t m_security_level;
   double m_scale;
   bool m_complex_packing;

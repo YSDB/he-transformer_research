@@ -82,45 +82,62 @@ void match_modulus_and_scale_inplace(SealCiphertextWrapper& arg0,
   match_scale(arg0, arg1);
 }
 
+void add_poly_scalar_coeffmod(seal::util::ConstCoeffIter poly, size_t coeff_count,
+                                     std::uint64_t scalar,
+                                     const seal::Modulus& modulus,
+                                     seal::util::CoeffIter result) {  
+  
+  seal::util::add_poly_scalar_coeffmod(poly, coeff_count, scalar, modulus, result);
+}
+
 void add_plain_inplace(seal::Ciphertext& encrypted, double value,
                        const HESealBackend& he_seal_backend) {
   // Verify parameters.
   auto context = he_seal_backend.get_context();
-  if (!seal::is_metadata_valid_for(encrypted, context)) {
+  if (!seal::is_metadata_valid_for(encrypted, *context)) {
     throw ngraph_error("encrypted is not valid for encryption parameters");
   }
-  auto& context_data = *context->get_context_data(encrypted.parms_id());
+  auto& context_data = *context->get_context_data(encrypted.parms_id()); //Why is "->" used here?(Priority "->" first, then "*")
   auto& parms = context_data.parms();
 
-  NGRAPH_CHECK(parms.scheme() == seal::scheme_type::CKKS,
-               "Scheme type must be CKKS");
-  if (parms.scheme() == seal::scheme_type::CKKS && !encrypted.is_ntt_form()) {
-    throw ngraph_error("CKKS encrypted must be in NTT form");
+  NGRAPH_CHECK(parms.scheme() == seal::scheme_type::ckks,
+               "Scheme type must be ckks");
+  if (parms.scheme() == seal::scheme_type::ckks && !encrypted.is_ntt_form()) {
+    throw ngraph_error("ckks encrypted must be in NTT form");
   }
 
   // Extract encryption parameters.
-  auto& coeff_modulus = parms.coeff_modulus();
+  auto& coeff_modulus = parms.coeff_modulus(); //Vector of primes suitable for modulus degree (Like 8192)
   size_t coeff_count = parms.poly_modulus_degree();
-  size_t coeff_mod_count = coeff_modulus.size();
+  size_t coeff_modulus_size = coeff_modulus.size(); //Number of primes
 
   // Size check
-  NGRAPH_CHECK(seal::util::product_fits_in(coeff_count, coeff_mod_count),
+  NGRAPH_CHECK(seal::util::product_fits_in(coeff_count, coeff_modulus_size),
                "invalid parameters");
 
   NGRAPH_CHECK(encrypted.data() != nullptr, "Encrypted data == nullptr");
 
   // Encode
-  std::vector<std::uint64_t> plaintext_vals(coeff_mod_count, 0);
+  //std::vector<std::uint64_t> values(coeff_modulus_size, 0);
+  seal::Plaintext plaintext_vals(coeff_count);
   double scale = encrypted.scale();
-  encode(value, element::f32, scale, encrypted.parms_id(), plaintext_vals,
-         he_seal_backend);
+  /*encode(value, element::f32, scale, encrypted.parms_id(), values,
+         he_seal_backend);*/
+  seal::CKKSEncoder encoder(*he_seal_backend.get_context());
+  encoder.encode(value, scale, plaintext_vals);
+  
+  //TODO: might be revised later.
+  seal::util::RNSIter encrypted_iter(encrypted.data(), coeff_count);
+  seal::util::ConstRNSIter plain_iter(plaintext_vals.data(), coeff_count);
+  seal::util::add_poly_coeffmod(encrypted_iter, plain_iter, coeff_modulus_size, coeff_modulus, encrypted_iter);
 
-  for (size_t j = 0; j < coeff_mod_count; j++) {
-    // Add poly scalar instead of poly poly
+  /*for (size_t j = 0; j < coeff_mod_count; j++) {
+    // Add poly scalar instead of poly poly (Old version)
     add_poly_scalar_coeffmod(encrypted.data() + (j * coeff_count), coeff_count,
                              plaintext_vals[j], coeff_modulus[j],
                              encrypted.data() + (j * coeff_count));
-  }
+  }*/
+  
 
 #ifndef SEAL_ALLOW_TRANSPARENT_CIPHERTEXT
   // Transparent ciphertext output is not allowed.
@@ -130,6 +147,7 @@ void add_plain_inplace(seal::Ciphertext& encrypted, double value,
 #endif
 }
 
+  //This seems independent.
 void multiply_plain_lazy_mod(const seal::Ciphertext& encrypted, double value,
                              seal::Ciphertext& destination,
                              const HESealBackend& he_seal_backend,
@@ -145,7 +163,7 @@ void multiply_plain_lazy_mod(const seal::Ciphertext& encrypted, double value,
   size_t coeff_mod_count = coeff_modulus.size();
   size_t encrypted_ntt_size = encrypted.size();
 
-  destination = seal::Ciphertext(he_seal_backend.get_context(),
+  destination = seal::Ciphertext(*(he_seal_backend.get_context()),
                                  encrypted.parms_id(), encrypted.size());
   destination.resize(encrypted.size());
   destination.is_ntt_form() = encrypted.is_ntt_form();
@@ -161,7 +179,7 @@ void multiply_plain_lazy_mod(const seal::Ciphertext& encrypted, double value,
   for (size_t i = 0; i < encrypted_ntt_size; i++) {
     for (size_t j = 0; j < coeff_mod_count; j++) {
       std::uint64_t scalar = plaintext_vals[j];
-#pragma omp simd
+#pragma omp simd //Lazy mod?
       for (size_t k = 0; k < coeff_count; k++) {
         *dest = *src * scalar;
         ++src;
@@ -170,7 +188,7 @@ void multiply_plain_lazy_mod(const seal::Ciphertext& encrypted, double value,
     }
   }
   // Set the scale
-  destination.scale() = new_scale;
+  destination.scale() = new_scale;//That easy?
 }
 
 void multiply_plain_inplace(seal::Ciphertext& encrypted, double value,
@@ -178,10 +196,10 @@ void multiply_plain_inplace(seal::Ciphertext& encrypted, double value,
                             const seal::MemoryPoolHandle& pool) {
   // Verify parameters.
   auto context = he_seal_backend.get_context();
-  if (!seal::is_metadata_valid_for(encrypted, context) ||
+  if (!seal::is_metadata_valid_for(encrypted, *context) ||
       !is_buffer_valid(encrypted) ||
       !context->get_context_data(encrypted.parms_id())) {
-    throw ngraph_error("encrypted is not valid for encryption parameters");
+    throw ngraph_error("222encrypted is not valid for encryption parameters");
   }
   if (!encrypted.is_ntt_form()) {
     throw ngraph_error("encrypted is not NTT form");
@@ -203,10 +221,13 @@ void multiply_plain_inplace(seal::Ciphertext& encrypted, double value,
                                            coeff_mod_count),
                "invalid parameters");
 
-  std::vector<std::uint64_t> plaintext_vals(coeff_mod_count, 0);
+  //std::vector<std::uint64_t> plaintext_vals(coeff_mod_count, 0);
   double scale = encrypted.scale();
-  encode(value, element::f32, scale, encrypted.parms_id(), plaintext_vals,
-         he_seal_backend);
+  /*encode(value, element::f32, scale, encrypted.parms_id(), plaintext_vals,
+         he_seal_backend);*/
+  seal::Plaintext plaintext_vals(coeff_count);
+  seal::CKKSEncoder encoder(*he_seal_backend.get_context());
+  encoder.encode(value, scale, plaintext_vals);
   double new_scale = scale * scale;
 
   // Check that scale is positive and not too large
@@ -218,7 +239,7 @@ void multiply_plain_inplace(seal::Ciphertext& encrypted, double value,
                << context_data.total_coeff_modulus_bit_count();
     throw ngraph_error("scale out of bounds");
   }
-  for (size_t i = 0; i < encrypted_ntt_size; i++) {
+  /*for (size_t i = 0; i < encrypted_ntt_size; i++) {
     for (size_t j = 0; j < coeff_mod_count; j++) {
       // Multiply by scalar instead of doing dyadic product
       if (coeff_modulus[j].value() < (1UL << 31U)) {
@@ -233,15 +254,32 @@ void multiply_plain_inplace(seal::Ciphertext& encrypted, double value,
             encrypted.data(i) + (j * coeff_count));
       }
     }
-  }
+  }*/
+  
+  //TODO: might be revised later.
+
+  seal::util::ConstRNSIter plain_ntt_iter(plaintext_vals.data(), coeff_count);
+  SEAL_ITERATE(seal::util::iter(encrypted), encrypted_ntt_size, [&](auto I) {
+      seal::util::dyadic_product_coeffmod(I, plain_ntt_iter, coeff_mod_count, coeff_modulus, I);
+      });
+
   // Set the scale
   encrypted.scale() = new_scale;
 }
 
+//Temporarily ignore this
 void multiply_poly_scalar_coeffmod64(const uint64_t* poly, size_t coeff_count,
                                      uint64_t scalar,
-                                     const seal::SmallModulus& modulus,
+                                     const seal::Modulus& modulus,
                                      std::uint64_t* result) {
+/*#ifdef SEAL_USE_INTEL_HEXL
+  intel::hexl::EltwiseFMAMod(&result[0], &poly[0], scalar.operand, nullptr, coeff_count, modulus.value(), 8);
+#else
+  SEAL_ITERATE(iter(poly, result), coeff_count, [&](auto I) {
+    const uint64_t x = get<0>(I);
+    get<1>(I) = multiply_uint_mod(x, scalar, modulus);
+  });
+#endif*/
   const uint64_t modulus_value = modulus.value();
   const uint64_t const_ratio_1 = modulus.const_ratio()[1];
 
@@ -434,7 +472,7 @@ void encode(double value, const element::Type& element_type, double scale,
           for (std::size_t j = 0; j < local_coeff_mod_count; j++) {
             // Manually inlined for efficiency
             // Make a fresh copy of value
-            seal::util::set_uint_uint(local_value, local_coeff_mod_count,
+            seal::util::set_uint(local_value, local_coeff_mod_count,
                                       value_copy.get());
 
             // Starting from the top, reduce always 128-bit blocks

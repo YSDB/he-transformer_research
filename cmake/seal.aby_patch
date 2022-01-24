@@ -2,7 +2,7 @@ diff --git a/native/src/seal/ckks.cpp b/native/src/seal/ckks.cpp
 index 62fd08e..8ef8b00 100644
 --- a/native/src/seal/ckks.cpp
 +++ b/native/src/seal/ckks.cpp
-@@ -108,7 +108,7 @@ namespace seal
+@@ -110,7 +110,7 @@ namespace seal
          int coeff_bit_count = static_cast<int>(log2(fabs(value))) + 2;
          if (coeff_bit_count >= context_data.total_coeff_modulus_bit_count())
          {
@@ -12,7 +12,7 @@ index 62fd08e..8ef8b00 100644
 
          double two_pow_64 = pow(2.0, 64);
 @@ -237,7 +237,7 @@ namespace seal
-             static_cast<uint64_t>(llabs(value))) + 2;
+         int coeff_bit_count = get_significant_bit_count(static_cast<uint64_t>(llabs(value))) + 2;
          if (coeff_bit_count >= context_data.total_coeff_modulus_bit_count())
          {
 -            throw invalid_argument("encoded value is too large");
@@ -24,8 +24,8 @@ diff --git a/native/src/seal/ckks.h b/native/src/seal/ckks.h
 index 73cea1f..8c4e402 100644
 --- a/native/src/seal/ckks.h
 +++ b/native/src/seal/ckks.h
-@@ -548,7 +548,7 @@ namespace seal
-             }
+@@ -512,7 +512,7 @@ namespace seal
+             int max_coeff_bit_count = static_cast<int>(std::ceil(std::log2(std::max<>(max_coeff, 1.0)))) + 1;
              if (max_coeff_bit_count >= context_data.total_coeff_modulus_bit_count())
              {
 -                throw std::invalid_argument("encoded values are too large");

@@ -50,7 +50,7 @@ inline std::size_t save(const seal::Ciphertext& cipher,
 inline void load(seal::Ciphertext& cipher,
                  std::shared_ptr<seal::SEALContext> context,
                  const std::byte* src, const std::size_t size) {
-  cipher.load(std::move(context), src, size);
+  cipher.load(std::move(*context), src, size);
 }
 
 /// \brief Class representing a lightweight wrapper around a SEAL ciphertext.

@@ -54,7 +54,7 @@ void scalar_add_seal(SealCiphertextWrapper& arg0, SealCiphertextWrapper& arg1,
   size_t min_count = std::min(encrypted1_size, encrypted2_size);
 
   // Prepare destination
-  encrypted1.resize(he_seal_backend.get_context(), context_data.parms_id(),
+  encrypted1.resize(*(he_seal_backend.get_context()), context_data.parms_id(),
                     max_count);
 
   // Add ciphertexts

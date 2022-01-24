@@ -42,23 +42,30 @@ TEST(seal_util, seal_security_level) {
 }
 
 TEST(seal_util, save) {
-  seal::EncryptionParameters parms(seal::scheme_type::CKKS);
+  seal::EncryptionParameters parms(seal::scheme_type::ckks);
   size_t poly_modulus_degree = 8192;
   parms.set_poly_modulus_degree(poly_modulus_degree);
   parms.set_coeff_modulus(
       seal::CoeffModulus::Create(poly_modulus_degree, {60, 40, 40, 60}));
 
-  auto context = seal::SEALContext::Create(parms);
+  std::shared_ptr<seal::SEALContext> context;
+  context = std::make_shared<seal::SEALContext>(parms);
+  //auto context = seal::SEALContext::Create(parms);
 
-  seal::KeyGenerator keygen(context);
-  auto public_key = keygen.public_key();
+  seal::KeyGenerator keygen(*context);
+  seal::PublicKey public_key;
+  keygen.create_public_key(public_key);
   auto secret_key = keygen.secret_key();
-  auto relin_keys = keygen.relin_keys();
+  seal::RelinKeys relin_keys;
+  keygen.create_relin_keys(relin_keys);
+  //auto public_key = keygen.public_key();
+  //auto secret_key = keygen.secret_key();
+  //auto relin_keys = keygen.relin_keys();
 
-  seal::Encryptor encryptor(context, public_key);
-  seal::Evaluator evaluator(context);
-  seal::Decryptor decryptor(context, secret_key);
-  seal::CKKSEncoder encoder(context);
+  seal::Encryptor encryptor(*context, public_key);
+  seal::Evaluator evaluator(*context);
+  seal::Decryptor decryptor(*context, secret_key);
+  seal::CKKSEncoder encoder(*context);
 
   std::vector<double> input{0.0, 1.1, 2.2, 3.3};
 
@@ -92,11 +99,12 @@ TEST(seal_util, save) {
   EXPECT_EQ(cipher_load.is_ntt_form(), cipher.is_ntt_form());
   EXPECT_EQ(cipher_load.size(), cipher.size());
   EXPECT_EQ(cipher_load.poly_modulus_degree(), cipher.poly_modulus_degree());
-  EXPECT_EQ(cipher_load.coeff_mod_count(), cipher.coeff_mod_count());
+  EXPECT_EQ(cipher_load.coeff_modulus_size(), cipher.coeff_modulus_size());
+  //EXPECT_EQ(cipher_load.coeff_mod_count(), cipher.coeff_mod_count());
   EXPECT_EQ(cipher_load.scale(), cipher.scale());
   EXPECT_EQ(cipher_load.is_transparent(), cipher.is_transparent());
 
-  for (size_t i = 0; i < cipher.int_array().size(); ++i) {
+  for (size_t i = 0; i < cipher.dyn_array().size(); ++i) {
     EXPECT_EQ(cipher_load[i], cipher[i]);
   }
   ngraph_free(buffer);
@@ -386,12 +394,12 @@ TEST(seal_util, encode) {
     size_t poly_modulus_degree =
         he_backend->get_encryption_parameters().poly_modulus_degree();
 
-    size_t expected_size = seal_plain.int_array().size() / poly_modulus_degree;
+    size_t expected_size = seal_plain.dyn_array().size() / poly_modulus_degree;
 
     EXPECT_EQ(dst.size(), expected_size);
     for (size_t dst_idx = 0; dst_idx < dst.size(); ++dst_idx) {
       EXPECT_EQ(dst[dst_idx],
-                seal_plain.int_array()[dst_idx * poly_modulus_degree]);
+                seal_plain.dyn_array()[dst_idx * poly_modulus_degree]);
     }
   };
 

@@ -47,20 +47,24 @@ TEST(perf_micro, encode) {
     std::chrono::nanoseconds time_he_add_plain_sum(0);
 
     // Seal setup
-    seal::EncryptionParameters parms(seal::scheme_type::CKKS);
+    seal::EncryptionParameters parms(seal::scheme_type::ckks);
 
     parms.set_poly_modulus_degree(poly_modulus_degree);
     parms.set_coeff_modulus(
         seal::CoeffModulus::Create(poly_modulus_degree, coeff_modulus_bits));
 
-    auto context = seal::SEALContext::Create(parms);
-    seal::CKKSEncoder encoder(context);
-    seal::KeyGenerator keygen(context);
+    std::shared_ptr<seal::SEALContext> context;
+    context = std::make_shared<seal::SEALContext>(parms);
+    //auto context = seal::SEALContext::Create(parms);
+    seal::CKKSEncoder encoder(*context);
+    seal::KeyGenerator keygen(*context);
     const auto& secret_key = keygen.secret_key();
-    const auto& public_key = keygen.public_key();
-    seal::Encryptor encryptor(context, public_key);
-    seal::Decryptor decryptor(context, secret_key);
-    seal::Evaluator evaluator(context);
+    seal::PublicKey public_key;
+    keygen.create_public_key(public_key);
+    //const auto& public_key = keygen.public_key();
+    seal::Encryptor encryptor(*context, public_key);
+    seal::Decryptor decryptor(*context, secret_key);
+    seal::Evaluator evaluator(*context);
 
     // he-transformer setup
     auto he_parms = HESealEncryptionParameters(
@@ -118,7 +122,7 @@ TEST(perf_micro, encode) {
       // seal::Plaintext multiplication
       if (test_run < mult_test_cnt) {
         if (coeff_modulus_bits.size() > 2) {
-          seal::Ciphertext encrypted(context);
+          seal::Ciphertext encrypted(*context);
           encryptor.encrypt(plain, encrypted);
 
           // SEAL
@@ -141,7 +145,7 @@ TEST(perf_micro, encode) {
 
       // seal::Plaintext addition
       if (test_run < add_test_cnt) {
-        seal::Ciphertext encrypted(context);
+        seal::Ciphertext encrypted(*context);
         encryptor.encrypt(plain, encrypted);
 
         // SEAL

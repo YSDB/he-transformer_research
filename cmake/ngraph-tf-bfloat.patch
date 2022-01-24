@@ -3,7 +3,8 @@ index 8aab3a43..bb561d24 100755
 --- a/tools/build_utils.py
 +++ b/tools/build_utils.py
 @@ -152,7 +152,7 @@ def setup_venv(venv_dir):
-         "setuptools",
+-        "setuptools",
++        "setuptools<58.0.0",
          "psutil",
          "six>=1.10.0",
 -        "numpy>=1.13.3",

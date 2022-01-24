@@ -31,7 +31,7 @@ namespace ngraph::runtime::he {
 TEST(encryption_parameters, create) {
   size_t poly_modulus_degree{4096};
   auto seal_encryption_parameters =
-      seal::EncryptionParameters(seal::scheme_type::CKKS);
+      seal::EncryptionParameters(seal::scheme_type::ckks);
 
   seal_encryption_parameters.set_poly_modulus_degree(poly_modulus_degree);
 
@@ -74,7 +74,7 @@ TEST(encryption_parameters, create) {
 TEST(encryption_parameters, save) {
   size_t poly_modulus_degree{4096};
   auto seal_encryption_parameters =
-      seal::EncryptionParameters(seal::scheme_type::CKKS);
+      seal::EncryptionParameters(seal::scheme_type::ckks);
 
   seal_encryption_parameters.set_poly_modulus_degree(poly_modulus_degree);
 

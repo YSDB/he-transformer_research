@@ -33,10 +33,12 @@ auto add_test = [](const Shape& shape, const bool arg1_encrypted,
                    const bool arg1_packed, const bool arg2_packed) {
   auto backend = runtime::Backend::create("${BACKEND_NAME}");
   auto he_backend = static_cast<he::HESealBackend*>(backend.get());
+  //print_encryption_parameters(he_backend->get_encryption_parameters(), *he_backend->get_context());
 
   if (complex_packing) {
     he_backend->update_encryption_parameters(
         he::HESealEncryptionParameters::default_complex_packing_parms());
+        //print_encryption_parameters(he_backend->get_encryption_parameters(), *he_backend->get_context());
   }
 
   auto a = std::make_shared<op::Parameter>(element::f32, shape);

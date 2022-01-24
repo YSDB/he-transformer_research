@@ -46,9 +46,9 @@ install(DIRECTORY ${ZLIB_LIB_DIR}/
 
 # SEAL
 set(SEAL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/ext_seal)
-set(SEAL_SRC_DIR ${SEAL_PREFIX}/src/ext_seal/native/src)
+set(SEAL_SRC_DIR ${SEAL_PREFIX}/src/ext_seal) #Should change the dir
 set(SEAL_REPO_URL https://github.com/Microsoft/SEAL.git)
-set(SEAL_GIT_TAG 3.4.5)
+set(SEAL_GIT_TAG 3.6.5)
 if (NGRAPH_HE_ABY_ENABLE)
   set(SEAL_PATCH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/seal.aby_patch)
 else()
@@ -90,6 +90,7 @@ ExternalProject_Add(
                     -DZLIB_ROOT=${ZLIB_PREFIX}
                     -DCMAKE_INSTALL_LIBDIR=${EXTERNAL_INSTALL_LIB_DIR}
                     -DCMAKE_INSTALL_INCLUDEDIR=${EXTERNAL_INSTALL_INCLUDE_DIR}
+                    -DSEAL_USE_INTEL_HEXL=ON
   PATCH_COMMAND git apply ${SEAL_PATCH}
   # Skip updates
   UPDATE_COMMAND ""
@@ -98,13 +99,13 @@ ExternalProject_Add(
 # ExternalProject_Get_Property(ext_seal SOURCE_DIR)
 add_library(libseal_only STATIC IMPORTED)
 
-set(SEAL_HEADERS_PATH ${EXTERNAL_INSTALL_INCLUDE_DIR}/SEAL-3.4)
+set(SEAL_HEADERS_PATH ${EXTERNAL_INSTALL_INCLUDE_DIR}/SEAL-3.6)
 
 target_include_directories(libseal_only SYSTEM
-                           INTERFACE ${EXTERNAL_INSTALL_INCLUDE_DIR}/SEAL-3.4)
+                           INTERFACE ${EXTERNAL_INSTALL_INCLUDE_DIR}/SEAL-3.6)
 set_target_properties(libseal_only
                       PROPERTIES IMPORTED_LOCATION
-                                 ${EXTERNAL_INSTALL_LIB_DIR}/libseal-3.4.a)
+                                 ${EXTERNAL_INSTALL_LIB_DIR}/libseal-3.6.a)
 add_dependencies(libseal_only ext_seal)
 
 # Link to this library to also link with zlib, which SEAL uses

@@ -119,22 +119,24 @@ inline void add_plain(const seal::Ciphertext& encrypted, double value,
 /// \param[out] result Will store the result of the multiplication
 void multiply_poly_scalar_coeffmod64(const uint64_t* poly, size_t coeff_count,
                                      uint64_t scalar,
-                                     const seal::SmallModulus& modulus,
+                                     const seal::Modulus& modulus,
                                      uint64_t* result);
 
 /// \brief Adds each element in a polynomial with a scalar modulo
-/// modulus_value.
+/// modulus_value.(Moved to .cpp)
 /// \param[in] poly Polynomial to be multiplied
 /// \param[in] coeff_count Number of terms in the polynomial
 /// \param[in] scalar Value with which to add
 /// \param[in] modulus modulus with which to reduce each addition
 /// \param[out] result Will store the result of the multiplication
-inline void add_poly_scalar_coeffmod(const std::uint64_t* poly,
-                                     std::size_t coeff_count,
+void add_poly_scalar_coeffmod(seal::util::ConstCoeffIter poly, size_t coeff_count,
                                      std::uint64_t scalar,
-                                     const seal::SmallModulus& modulus,
-                                     std::uint64_t* result) {
-  const uint64_t modulus_value = modulus.value();
+                                     const seal::Modulus& modulus,
+                                     seal::util::CoeffIter result); 
+/*{  
+  seal::util::add_poly_scalar_coeffmod(poly, coeff_count, scalar, modulus, result);
+}*/
+/*  const uint64_t modulus_value = modulus.value();
 #ifdef SEAL_DEBUG
   if (poly == nullptr && coeff_count > 0) {
     throw ngraph_error("poly");
@@ -164,7 +166,7 @@ inline void add_poly_scalar_coeffmod(const std::uint64_t* poly,
                      static_cast<std::uint64_t>(
                          -static_cast<std::int64_t>(sum >= modulus_value)));
   }
-}
+}*/
 
 /// \brief Multiplies a ciphertext with a scalar in every slot
 /// \param[in,out] encrypted Ciphertext to multply
