@@ -98,8 +98,6 @@ bool HESealBackend::set_config(const std::map<std::string, std::string>& config,
         m_enable_client = true;
       }
     } else if (option == "encryption_parameters") {
-      	NGRAPH_WARN
-          << "What's wrong with it?";
       auto new_parms = HESealEncryptionParameters::parse_config_or_use_default(
           setting.c_str());
       update_encryption_parameters(new_parms);
