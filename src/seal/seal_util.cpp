@@ -109,34 +109,34 @@ void add_plain_inplace(seal::Ciphertext& encrypted, double value,
   // Extract encryption parameters.
   auto& coeff_modulus = parms.coeff_modulus(); //Vector of primes suitable for modulus degree (Like 8192)
   size_t coeff_count = parms.poly_modulus_degree();
-  size_t coeff_modulus_size = coeff_modulus.size(); //Number of primes
+  size_t coeff_mod_count = coeff_modulus.size(); //Number of primes
 
   // Size check
-  NGRAPH_CHECK(seal::util::product_fits_in(coeff_count, coeff_modulus_size),
+  NGRAPH_CHECK(seal::util::product_fits_in(coeff_count, coeff_mod_count),
                "invalid parameters");
 
   NGRAPH_CHECK(encrypted.data() != nullptr, "Encrypted data == nullptr");
 
   // Encode
-  //std::vector<std::uint64_t> values(coeff_modulus_size, 0);
-  seal::Plaintext plaintext_vals(coeff_count);
+  std::vector<std::uint64_t> values(coeff_mod_count, 0);
+  /*seal::Plaintext plaintext_vals(coeff_count);*/
   double scale = encrypted.scale();
-  /*encode(value, element::f32, scale, encrypted.parms_id(), values,
-         he_seal_backend);*/
-  seal::CKKSEncoder encoder(*he_seal_backend.get_context());
-  encoder.encode(value, scale, plaintext_vals);
+  encode(value, element::f32, scale, encrypted.parms_id(), values,
+         he_seal_backend);
+  /*seal::CKKSEncoder encoder(*he_seal_backend.get_context());
+  encoder.encode(value, scale, plaintext_vals);*/
   
   //TODO: might be revised later.
-  seal::util::RNSIter encrypted_iter(encrypted.data(), coeff_count);
+  /*seal::util::RNSIter encrypted_iter(encrypted.data(), coeff_count);
   seal::util::ConstRNSIter plain_iter(plaintext_vals.data(), coeff_count);
-  seal::util::add_poly_coeffmod(encrypted_iter, plain_iter, coeff_modulus_size, coeff_modulus, encrypted_iter);
+  seal::util::add_poly_coeffmod(encrypted_iter, plain_iter, coeff_modulus_size, coeff_modulus, encrypted_iter);*/
 
-  /*for (size_t j = 0; j < coeff_mod_count; j++) {
+  for (size_t j = 0; j < coeff_mod_count; j++) {
     // Add poly scalar instead of poly poly (Old version)
     add_poly_scalar_coeffmod(encrypted.data() + (j * coeff_count), coeff_count,
-                             plaintext_vals[j], coeff_modulus[j],
+                             values[j], coeff_modulus[j],
                              encrypted.data() + (j * coeff_count));
-  }*/
+  }
   
 
 #ifndef SEAL_ALLOW_TRANSPARENT_CIPHERTEXT
@@ -221,13 +221,13 @@ void multiply_plain_inplace(seal::Ciphertext& encrypted, double value,
                                            coeff_mod_count),
                "invalid parameters");
 
-  //std::vector<std::uint64_t> plaintext_vals(coeff_mod_count, 0);
+  std::vector<std::uint64_t> plaintext_vals(coeff_mod_count, 0);
   double scale = encrypted.scale();
-  /*encode(value, element::f32, scale, encrypted.parms_id(), plaintext_vals,
-         he_seal_backend);*/
-  seal::Plaintext plaintext_vals(coeff_count);
+  encode(value, element::f32, scale, encrypted.parms_id(), plaintext_vals,
+         he_seal_backend);
+  /*seal::Plaintext plaintext_vals(coeff_count);
   seal::CKKSEncoder encoder(*he_seal_backend.get_context());
-  encoder.encode(value, scale, plaintext_vals);
+  encoder.encode(value, scale, plaintext_vals);*/
   double new_scale = scale * scale;
 
   // Check that scale is positive and not too large
@@ -239,7 +239,7 @@ void multiply_plain_inplace(seal::Ciphertext& encrypted, double value,
                << context_data.total_coeff_modulus_bit_count();
     throw ngraph_error("scale out of bounds");
   }
-  /*for (size_t i = 0; i < encrypted_ntt_size; i++) {
+  for (size_t i = 0; i < encrypted_ntt_size; i++) {
     for (size_t j = 0; j < coeff_mod_count; j++) {
       // Multiply by scalar instead of doing dyadic product
       if (coeff_modulus[j].value() < (1UL << 31U)) {
@@ -254,14 +254,14 @@ void multiply_plain_inplace(seal::Ciphertext& encrypted, double value,
             encrypted.data(i) + (j * coeff_count));
       }
     }
-  }*/
+  }
   
   //TODO: might be revised later.
 
-  seal::util::ConstRNSIter plain_ntt_iter(plaintext_vals.data(), coeff_count);
+  /*seal::util::ConstRNSIter plain_ntt_iter(plaintext_vals.data(), coeff_count);
   SEAL_ITERATE(seal::util::iter(encrypted), encrypted_ntt_size, [&](auto I) {
       seal::util::dyadic_product_coeffmod(I, plain_ntt_iter, coeff_mod_count, coeff_modulus, I);
-      });
+      });*/
 
   // Set the scale
   encrypted.scale() = new_scale;
