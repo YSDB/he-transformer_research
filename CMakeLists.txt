@@ -95,14 +95,14 @@ if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
 endif()
 
 # Build options python version used in virtual environment
-find_package(Python 3.6 EXACT)
-if(NOT PYTHON_FOUND)
+find_package(PythonInterp 3)
+if(NOT PYTHONINTERP_FOUND)
   message(FATAL_ERROR "Python3 not found.")
 endif()
 
 if(NOT DEFINED PYTHON_VENV_VERSION)
   set(PYTHON_VENV_VERSION
-      "python3.6")
+      "python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
 endif()
 
 option(NGRAPH_HE_DOC_BUILD_ENABLE "Enable building of documentation" OFF)
@@ -121,7 +121,7 @@ message(STATUS "NGRAPH_HE_CLANG_TIDY:       ${NGRAPH_HE_CLANG_TIDY}")
 message(STATUS "NGRAPH_HE_SANITIZE_ADDRESS  ${NGRAPH_HE_SANITIZE_ADDRESS}")
 message(STATUS "NGRAPH_HE_PARALLEL          ${NGRAPH_HE_PARALLEL}")
 message(STATUS "PYTHON_VENV_VERSION:        ${PYTHON_VENV_VERSION}")
-message(STATUS "PYTHON_VERSION_STRING:      3.6.9")
+message(STATUS "PYTHON_VERSION_STRING:      ${PYTHON_VERSION_STRING}")
 
 if(NGRAPH_HE_SANITIZE_ADDRESS)
   set(CMAKE_CXX_FLAGS
