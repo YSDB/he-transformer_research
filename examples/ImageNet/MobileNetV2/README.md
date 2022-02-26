@@ -39,11 +39,11 @@ python get_models.py
 
 # Image-Net evaluation
 1. First, sign up for an account at image-net.org
-2. Download the 2012 test_images (all tasks)) 13GB MD5: `e64ceb247e473635708aed23ab6d839` file on image-net.org
+2. Download the 2012 validation_images (all tasks)) 13GB MD5: `29b22e2961454d5413ddabcf34fc5622` file on image-net.org
 
 Extract the validation images:
 ```bash
-tar -xf ILSVRC2012_img_test.tar
+tar -xf ILSVRC2012_img_val.tar
 ```
 3. Download development kit (Task 1 & 2) and extract `validation_ground_truth.txt`
 
