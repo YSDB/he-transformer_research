@@ -17,33 +17,33 @@
 include(ExternalProject)
 
 # Zlib
-set(ZLIB_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/ext_zlib)
-set(ZLIB_SRC_DIR ${ZLIB_PREFIX}/src)
-set(ZLIB_LIB_DIR ${ZLIB_SRC_DIR}/ext_zlib-build)
-set(ZLIB_REPO_URL https://github.com/madler/zlib.git)
-set(ZLIB_GIT_TAG v1.2.11)
+# set(ZLIB_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/ext_zlib)
+# set(ZLIB_SRC_DIR ${ZLIB_PREFIX}/src)
+# set(ZLIB_LIB_DIR ${ZLIB_SRC_DIR}/ext_zlib-build)
+# set(ZLIB_REPO_URL https://github.com/madler/zlib.git)
+# set(ZLIB_GIT_TAG v1.2.11)
+# 
+# ExternalProject_Add(ext_zlib
+#     GIT_REPOSITORY    ${ZLIB_REPO_URL}
+#     GIT_TAG           ${ZLIB_GIT_TAG}
+#     PREFIX            ${ZLIB_PREFIX}
+#     INSTALL_COMMAND   ""
+#     UPDATE_COMMAND    ""
+# )
+# 
+# add_library(zlib SHARED IMPORTED)
+# set_target_properties(zlib
+#                         PROPERTIES IMPORTED_LOCATION ${ZLIB_LIB_DIR}/libz.so)
+# add_dependencies(zlib ext_zlib)
 
-ExternalProject_Add(ext_zlib
-    GIT_REPOSITORY    ${ZLIB_REPO_URL}
-    GIT_TAG           ${ZLIB_GIT_TAG}
-    PREFIX            ${ZLIB_PREFIX}
-    INSTALL_COMMAND   ""
-    UPDATE_COMMAND    ""
-)
-
-add_library(zlib SHARED IMPORTED)
-set_target_properties(zlib
-                        PROPERTIES IMPORTED_LOCATION ${ZLIB_LIB_DIR}/libz.so)
-add_dependencies(zlib ext_zlib)
-
-install(DIRECTORY ${ZLIB_LIB_DIR}/
-        DESTINATION ${EXTERNAL_INSTALL_LIB_DIR}
-        FILES_MATCHING
-        PATTERN "*.so"
-        PATTERN "*.so*"
-        PATTERN "*.a"
-        )
-
+# install(DIRECTORY ${ZLIB_LIB_DIR}/
+#         DESTINATION ${EXTERNAL_INSTALL_LIB_DIR}
+#         FILES_MATCHING
+#         PATTERN "*.so"
+#         PATTERN "*.so*"
+#         PATTERN "*.a"
+#         )
+# 
 # SEAL
 set(SEAL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/ext_seal)
 set(SEAL_SRC_DIR ${SEAL_PREFIX}/src/ext_seal) #Should change the dir
@@ -87,7 +87,6 @@ ExternalProject_Add(
                     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                     -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                     -DSEAL_USE_CXX17=ON
-                    -DZLIB_ROOT=${ZLIB_PREFIX}
                     -DCMAKE_INSTALL_LIBDIR=${EXTERNAL_INSTALL_LIB_DIR}
                     -DCMAKE_INSTALL_INCLUDEDIR=${EXTERNAL_INSTALL_INCLUDE_DIR}
                     -DSEAL_USE_INTEL_HEXL=ON
