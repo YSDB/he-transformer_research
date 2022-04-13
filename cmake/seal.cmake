@@ -16,7 +16,7 @@
 
 include(ExternalProject)
 
-Zlib
+# Zlib
 set(ZLIB_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/ext_zlib)
 set(ZLIB_SRC_DIR ${ZLIB_PREFIX}/src)
 set(ZLIB_LIB_DIR ${ZLIB_SRC_DIR}/ext_zlib-build)
