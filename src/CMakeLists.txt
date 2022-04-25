@@ -82,7 +82,7 @@ target_link_libraries(he_seal_backend
                       PUBLIC libjson
                              libboost
                              libseal
-                             zlib
+                             # zlib
                              libngraph
                              libabseil
                              protobuf::libprotobuf
