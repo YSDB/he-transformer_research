@@ -17,32 +17,32 @@
 include(ExternalProject)
 
 # Zlib
-set(ZLIB_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/ext_zlib)
-set(ZLIB_SRC_DIR ${ZLIB_PREFIX}/src)
-set(ZLIB_LIB_DIR ${ZLIB_SRC_DIR}/ext_zlib-build)
-set(ZLIB_REPO_URL https://github.com/madler/zlib.git)
-set(ZLIB_GIT_TAG v1.2.11)
+# set(ZLIB_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/ext_zlib)
+# set(ZLIB_SRC_DIR ${ZLIB_PREFIX}/src)
+# set(ZLIB_LIB_DIR ${ZLIB_SRC_DIR}/ext_zlib-build)
+# set(ZLIB_REPO_URL https://github.com/madler/zlib.git)
+# set(ZLIB_GIT_TAG v1.2.11)
+# 
+# ExternalProject_Add(ext_zlib
+#     GIT_REPOSITORY    ${ZLIB_REPO_URL}
+#     GIT_TAG           ${ZLIB_GIT_TAG}
+#     PREFIX            ${ZLIB_PREFIX}
+#     INSTALL_COMMAND   ""
+#     UPDATE_COMMAND    ""
+# )
+# 
+# add_library(zlib SHARED IMPORTED)
+# set_target_properties(zlib
+#                         PROPERTIES IMPORTED_LOCATION ${ZLIB_LIB_DIR}/libz.so)
+# add_dependencies(zlib ext_zlib)
 
-ExternalProject_Add(ext_zlib
-    GIT_REPOSITORY    ${ZLIB_REPO_URL}
-    GIT_TAG           ${ZLIB_GIT_TAG}
-    PREFIX            ${ZLIB_PREFIX}
-    INSTALL_COMMAND   ""
-    UPDATE_COMMAND    ""
-)
-
-add_library(zlib SHARED IMPORTED)
-set_target_properties(zlib
-                        PROPERTIES IMPORTED_LOCATION ${ZLIB_LIB_DIR}/libz.so)
-add_dependencies(zlib ext_zlib)
-
-install(DIRECTORY ${ZLIB_LIB_DIR}/
-        DESTINATION ${EXTERNAL_INSTALL_LIB_DIR}
-        FILES_MATCHING
-        PATTERN "*.so"
-        PATTERN "*.so*"
-        PATTERN "*.a"
-        )
+# install(DIRECTORY ${ZLIB_LIB_DIR}/
+#         DESTINATION ${EXTERNAL_INSTALL_LIB_DIR}
+#         FILES_MATCHING
+#         PATTERN "*.so"
+#         PATTERN "*.so*"
+#         PATTERN "*.a"
+#         )
 
 # SEAL
 set(SEAL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/ext_seal)
@@ -109,4 +109,4 @@ add_dependencies(libseal_only ext_seal)
 
 # Link to this library to also link with zlib, which SEAL uses
 add_library(libseal INTERFACE)
-target_link_libraries(libseal INTERFACE zlib libseal_only)
+target_link_libraries(libseal INTERFACE libseal_only)
